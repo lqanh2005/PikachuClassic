@@ -8,6 +8,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
     public GridManager gridManager;
+    public HintManager hintManager;
+    public LineRender lineRender;
 
     private BlockData firstSelected;
     private BlockData secondSelected;
@@ -29,15 +31,21 @@ public class GameManager : MonoBehaviour
             secondSelected.ChangeColor(true);
             CheckMath();
         }
+        else if(firstSelected == block)
+        {
+            firstSelected.ChangeColor(false);
+            firstSelected=null;
+        }
     }
 
     private void CheckMath()
     {
         if(firstSelected.id == secondSelected.id)
         {
-            Debug.LogError(PathFinding.CanConnect(firstSelected, secondSelected));
-            if(PathFinding.CanConnect(firstSelected, secondSelected))
+            List<Vector2Int> path = PathFinding.CanConnect(firstSelected, secondSelected);
+            if(path.Count>0)
             {
+                lineRender.DrawConnection(path);
                 firstSelected.HideBlock();
                 secondSelected.HideBlock();
             }
@@ -67,5 +75,9 @@ public class GameManager : MonoBehaviour
         {
             remainBlock[i].SetBlockData(gridManager.spriteList[shuffleId[i]], shuffleId[i], remainBlock[i].x, remainBlock[i].y);
         }
+    }
+    public void ShowHint()
+    {
+        hintManager.ShowHint();
     }
 }

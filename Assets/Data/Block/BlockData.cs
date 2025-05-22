@@ -11,6 +11,11 @@ public class BlockData : MonoBehaviour
     public int y;
     public SpriteRenderer spriteRenderer;
     public GridManager gridManager;
+    private static readonly Color selectColor = new Color(128 / 255f, 128 / 255f, 128 / 255f);
+    private void Awake()
+    {
+        gridManager = FindObjectOfType<GridManager>();
+    }
 
     public void SetBlockData(Sprite sprite,int id, int x, int y)
     {
@@ -18,7 +23,6 @@ public class BlockData : MonoBehaviour
         this.id = id;
         this.x = x;
         this.y = y;
-        gridManager=FindObjectOfType<GridManager>();
     }
     public void HideBlock()
     {
@@ -27,14 +31,14 @@ public class BlockData : MonoBehaviour
     }
     public void ChangeColor(bool isSelected)
     {
-       
+
         if (isSelected)
         {
-            this.spriteRenderer.color = new Color(128 / 255f, 128 / 255f, 128 / 255f);
+            this.spriteRenderer.color = selectColor;
         }
-        else 
+        else
         {
-            this.spriteRenderer.color = new Color(1f, 1f, 1f);
+            this.spriteRenderer.color = Color.white;
         }
     }
 }

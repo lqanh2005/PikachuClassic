@@ -14,66 +14,101 @@ public static class PathFinding
     {
         grid = blockGrid;
     }
-    public static bool CanConnect(BlockData startBlock, BlockData targetBlock)
+    public static List<Vector2Int> CanConnect(BlockData startBlock, BlockData targetBlock)
     {
-        if (startBlock == null || targetBlock == null || startBlock.id != targetBlock.id) return false;
+        // Kiểm tra null và id
+        if (startBlock == null || targetBlock == null || startBlock.id != targetBlock.id)
+            return new List<Vector2Int>();
+
         Vector2Int startPos = new Vector2Int(startBlock.x, startBlock.y);
-        Vector2Int targetPos= new Vector2Int(targetBlock.x, targetBlock.y);
-        if (!IsValidPosition(startPos) || !IsValidPosition(targetPos)) return false;
+        Vector2Int targetPos = new Vector2Int(targetBlock.x, targetBlock.y);
+        if (!IsValidPosition(startPos) || !IsValidPosition(targetPos))
+            return new List<Vector2Int>();
+        if (startPos == targetPos)
+            return new List<Vector2Int> { startPos };
+
         return BFS(startPos, targetPos);
     }
 
-    private static bool BFS(Vector2Int start, Vector2Int target)
-    {
-        List<(Vector2Int pos, Vector2Int dir, int turns, int cost)> queue = new List<(Vector2Int, Vector2Int, int, int)>();
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
 
-        foreach (Vector2Int dir in directions)
-        {
-            Vector2Int nextPos = start + dir;
-            if (IsValid(nextPos, target))
-            {
-                queue.Add((nextPos, dir, 0, 0));
-            }
-        }
+    private static List<Vector2Int> BFS(Vector2Int start, Vector2Int target)
+    {
+        Queue<(Vector2Int pos, Vector2Int dir, int turns, List<Vector2Int> path)> queue =
+            new Queue<(Vector2Int, Vector2Int, int, List<Vector2Int>)>();
+        bool[,] visited = new bool[rows, cols];
+        queue.Enqueue((start, Vector2Int.zero, 0, new List<Vector2Int> { start }));
+        visited[start.x, start.y] = true;
 
         while (queue.Count > 0)
         {
-            queue.Sort((a, b) => a.cost.CompareTo(b.cost));
-            var (pos, dir, turns, cost) = queue[0];
-            queue.RemoveAt(0);
-
+            var (pos, dir, turns, path) = queue.Dequeue();
+            if (pos == target)
+            {
+                return path;
+            }
             if (turns > 2) continue;
-            if (pos == target) return true;
-            if (visited.Contains(pos)) continue;
-            visited.Add(pos);
 
             foreach (var newDir in directions)
             {
                 Vector2Int nextPos = pos + newDir;
-                int newTurns = (newDir == dir) ? turns : turns + 1;
-                int newCost = newTurns;
-
-                if (IsValid(nextPos, target))
+                int newTurns = turns;
+                if (dir != Vector2Int.zero && newDir != dir)
                 {
-                    queue.Add((nextPos, newDir, newTurns, newCost));
+                    newTurns = turns + 1;
+                }
+
+                if (IsValid(nextPos, target) && !visited[nextPos.x, nextPos.y])
+                {
+                    visited[nextPos.x, nextPos.y] = true;
+                    var newPath = new List<Vector2Int>(path) { nextPos };
+                    queue.Enqueue((nextPos, newDir, newTurns, newPath));
                 }
             }
         }
-        return false;
+
+        return new List<Vector2Int>();
     }
+
 
     private static bool IsValid(Vector2Int pos, Vector2Int target)
     {
         if (pos.x < 0 || pos.x >= rows || pos.y < 0 || pos.y >= cols)
             return false;
-        if (grid[pos.x, pos.y] == null || pos == target) return true;
-
-        return false;
+        if (pos == target) return true;
+        return grid[pos.x, pos.y] == null;
     }
     private static bool IsValidPosition(Vector2Int pos)
     {
-        return pos.x >= 0 && pos.x <= rows && pos.y >= 0 && pos.y <= cols;
+        return pos.x >= 0 && pos.x < rows && pos.y >= 0 && pos.y < cols;
     }
+    public static (BlockData, BlockData)? FindHint()
+    {
+        if (grid == null) return null;
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                BlockData currentBlock = grid[i, j];
+                if (currentBlock == null) continue;
+                for (int x = 0; x < rows; x++)
+                {
+                    for (int y = 0; y < cols; y++)
+                    {
+                        if (x == i && y == j) continue;
 
+                        BlockData targetBlock = grid[x, y];
+                        if (targetBlock == null || targetBlock.id != currentBlock.id) continue;
+                        List<Vector2Int> path = CanConnect(currentBlock, targetBlock);
+                        if (path.Count > 0)
+                        {
+                            return (currentBlock, targetBlock);
+                        }
+                    }
+                }
+            }
+        }
+
+        return null; 
+    }
+    
 }

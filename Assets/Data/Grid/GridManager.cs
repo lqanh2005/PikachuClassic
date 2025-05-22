@@ -23,6 +23,13 @@ public class GridManager : MonoBehaviour
 
     private void GenerateGrid()
     {
+        for(int i=0; i<rows; i++)
+        {
+            for(int j=0; j<cols; j++)
+            {
+                grid[i, j] = null;
+            }
+        }
         List<int> listIds = ShuffleId();
         int idx = 0;
         for(int x=1; x<=rows-2; x++)
